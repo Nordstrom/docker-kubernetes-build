@@ -15,9 +15,10 @@ RUN mkdir -p ${K8S_PATH} \
 FROM quay.io/nordstrom/cfssl:1.2.0
 
 # stage 2
-FROM quay.io/nordstrom/kube-deployer:1.0.9
-LABEL maintainer.team="Nordstrom Platform Team"
-LABEL maintainer.email="techk8s@nordstrom.com"
+FROM google/cloud-sdk:183.0.0-alpine
+
+# stage 3
+FROM hashicorp/terraform:0.11.2
 
 ENV K8S_PATH ${GOPATH}/src/github.com/kubernetes/kubernetes
 COPY --from=0 ${K8S_PATH}/_output/bin ${K8S_PATH}/_output/bin
@@ -32,6 +33,12 @@ COPY --from=1 \
      /usr/bin/mkbundle \
      /usr/bin/multirootca \
      /usr/bin/
+
+COPY --from=2 /google-cloud-sdk/bin:/google-cloud-sdk/bin
+ENV PATH /google-cloud-sdk/bin:$PATH
+VOLUME ["/.config"]
+
+COPY --from=3 /bin/terraform:/bin/terraform
 
 RUN DEBIAN_FRONTEND=noninteractive \
     && apt-get -y update \
