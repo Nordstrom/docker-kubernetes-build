@@ -14,6 +14,9 @@ RUN mkdir -p ${K8S_PATH} \
 # stage 1
 FROM quay.io/nordstrom/cfssl:1.2.0
 
+# stage 3
+FROM google/cloud-sdk:183.0.0-alpine
+
 # stage 2
 FROM quay.io/nordstrom/kube-deployer:1.0.9
 LABEL maintainer.team="Nordstrom Platform Team"
@@ -32,6 +35,10 @@ COPY --from=1 \
      /usr/bin/mkbundle \
      /usr/bin/multirootca \
      /usr/bin/
+
+COPY --from=2 /google-cloud-sdk/bin:/google-cloud-sdk/bin
+ENV PATH /google-cloud-sdk/bin:$PATH
+VOLUME ["/.config"]
 
 RUN DEBIAN_FRONTEND=noninteractive \
     && apt-get -y update \
